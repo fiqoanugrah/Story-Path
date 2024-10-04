@@ -1,15 +1,15 @@
 import React from 'react';
 import 'leaflet/dist/leaflet.css'; 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import ErrorBoundary from './ErrorBoundary';
+import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import Home from './pages/Home';
 import Projects from './pages/Projects';
-import ProjectForm from './components/ProjectForm';
-import ProjectList from './components/ProjectList';
-import LocationList from './components/LocationList';
-import LocationForm from './components/LocationForm';
-import PreviewPage from "./components/PreviewPage";
+import ProjectForm from './pages/projects/ProjectForm';
+import ProjectList from './pages/projects/ProjectList';
+import LocationList from './pages/locations/LocationList';
+import LocationForm from './pages/locations/LocationForm';
+import PreviewPage from "./pages/preview/PreviewPage";
 import ScannerRedirect from "./components/ScannerRedirect";
 
 function App() {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createLocation, updateLocation, getLocation, USERNAME } from '../utils/api';
+import { createLocation, updateLocation, getLocation, USERNAME } from '../../utils/api';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
@@ -127,6 +127,28 @@ const LocationForm = () => {
 
   return (
     <div className="min-h-screen bg-base-200 p-4">
+      {/* Updated Back Button to match style */}
+      <button
+        onClick={() => navigate(`/project/${projectId}/locations`)}
+        className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="w-5 h-5"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 19.5L8.25 12l7.5-7.5"
+          />
+        </svg>
+        <span>Back to Locations</span>
+      </button>
+
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">{id ? 'Edit' : 'Create'} Location</h1>
         {error && <div className="alert alert-error mb-6">{error}</div>}

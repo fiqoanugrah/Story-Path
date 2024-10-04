@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import HeroIcon from '../assets/hero-icon.png'; // Make sure the path is correct
 
 const FeatureCard = ({ title, description }) => (
   <div className="bg-white p-6 rounded-lg shadow-md">
@@ -11,7 +12,7 @@ const FeatureCard = ({ title, description }) => (
 const Footer = () => (
   <footer className="bg-gray-800 text-white py-4">
     <div className="container mx-auto px-4 text-center">
-      <p>&copy; 2024 StoryPath. All rights reserved.</p>
+      <p>&copy; {new Date().getFullYear()} StoryPath. Muhammad Fiqo Anugrah (48298975). All rights reserved.</p>
     </div>
   </footer>
 );
@@ -23,11 +24,12 @@ const Home = () => {
         {/* Hero Section */}
         <div className="bg-blue-100 text-blue-900 py-20">
           <div className="container mx-auto px-4 text-center">
+            <img src={HeroIcon} alt="Hero Icon" className="mx-auto w-32 h-32 mb-4" /> {/* Hero Icon Above Text */}
             <h1 className="text-5xl font-bold mb-4">Welcome to StoryPath</h1>
-            <p className="text-xl mb-8">Create and explore immersive location-based experiences. </p>
+            <p className="text-xl mb-8">Create and explore immersive location-based experiences.</p>
             <Link 
               to="/projects" 
-              className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300"
+              className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
             >
               View Projects
             </Link>
@@ -53,7 +55,7 @@ const Home = () => {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer/>
     </div>
   );
 };

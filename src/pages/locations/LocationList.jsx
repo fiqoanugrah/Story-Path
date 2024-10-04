@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getLocations, deleteLocation } from '../utils/api';
-import QRCode from 'react-qr-code';
+import { getLocations, deleteLocation } from '../../utils/api';
+import { QRCodeSVG } from 'qrcode.react';
 
 const LocationList = () => {
   const { projectId } = useParams();
@@ -10,6 +10,7 @@ const LocationList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedQR, setSelectedQR] = useState(null);
+  const [showAllQR, setShowAllQR] = useState(false);
 
   useEffect(() => {
     fetchLocations();
@@ -19,7 +20,7 @@ const LocationList = () => {
     try {
       setLoading(true);
       const data = await getLocations(projectId);
-      setLocations(data);
+      setLocations(data); // Setting the locations data
       setProjectTitle(data[0]?.project_title || 'Project');
     } catch (err) {
       setError(`Failed to fetch locations: ${err.message}`);
@@ -32,59 +33,50 @@ const LocationList = () => {
     if (window.confirm('Are you sure you want to delete this location?')) {
       try {
         await deleteLocation(id);
-        fetchLocations();
+        fetchLocations(); // Refresh locations after deletion
       } catch (err) {
         setError(`Failed to delete location: ${err.message}`);
       }
     }
   };
 
-  const handleMoveLocation = (index, direction) => {
-    const newLocations = [...locations];
-    const item = newLocations[index];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-
-    if (newIndex >= 0 && newIndex < newLocations.length) {
-      newLocations.splice(index, 1);
-      newLocations.splice(newIndex, 0, item);
-      setLocations(newLocations);
-      localStorage.setItem(`locations_${projectId}`, JSON.stringify(newLocations));
-    }
+  const generateQRCodeData = (location) => {
+    const data = {
+      id: location.id,
+      name: location.location_name,
+      position: location.location_position,
+      trigger: location.location_trigger,
+      points: location.score_points,
+      clue: location.clue,
+      project_id: projectId
+    };
+    return JSON.stringify(data);
   };
 
-  const handleQRCode = (locationId) => {
-    setSelectedQR(selectedQR === locationId ? null : locationId);
+  const renderQRCode = (location) => {
+    const qrData = generateQRCodeData(location);
+    return (
+      <div className="flex justify-center items-center mt-4"> {/* Centering the QR Code */}
+        <QRCodeSVG 
+          value={qrData} 
+          size={150} 
+          level="M"
+        />
+      </div>
+    );
   };
 
   const handlePrintAllQRCodes = () => {
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write('<html><head><title>All QR Codes</title></head><body>');
-    locations.forEach(location => {
-      printWindow.document.write(`<h2>${location.location_name}</h2>`);
-      printWindow.document.write(`<div id="qr-${location.id}"></div>`);
-    });
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-
-    locations.forEach(location => {
-      new QRCode(printWindow.document.getElementById(`qr-${location.id}`), {
-        text: `https://yourapp.com/location/${location.id}`,
-        width: 128,
-        height: 128,
-      });
-    });
-
-    printWindow.print();
+    setShowAllQR(!showAllQR); 
   };
 
-  useEffect(() => {
-    const storedLocations = localStorage.getItem(`locations_${projectId}`);
-    if (storedLocations) {
-      setLocations(JSON.parse(storedLocations));
-    } else {
-      fetchLocations();
-    }
-  }, [projectId]);
+  // Moving location in the array
+  const moveLocation = (index, direction) => {
+    const newLocations = [...locations];
+    const [movedLocation] = newLocations.splice(index, 1); 
+    newLocations.splice(index + direction, 0, movedLocation); 
+    setLocations(newLocations); // Force state update with new order
+  };
 
   if (loading) return <div className="loading loading-lg"></div>;
   if (error) return <div className="alert alert-error">{error}</div>;
@@ -95,17 +87,33 @@ const LocationList = () => {
         <h1 className="text-3xl font-bold">{projectTitle} - Locations</h1>
       </div>
   
-      <div className="flex justify-between items-center mb-6">
-        <Link to={`/project/${projectId}/location/new`} className="btn btn-primary">
+      <div className="flex justify-between items-center mb-6 flex-wrap">
+        <Link to={`/project/${projectId}/location/new`} className="btn btn-primary mb-2 sm:mb-0">
           Add Location
         </Link>
-        <div>
-          <button onClick={handlePrintAllQRCodes} className="btn btn-warning mr-2">Print QR Codes for All</button>
+        <div className="flex space-x-4">
+          <button onClick={handlePrintAllQRCodes} className="btn btn-warning">
+            {showAllQR ? 'Hide All QR Codes' : 'Print QR Codes for All'}
+          </button>
           <Link to={`/project/${projectId}/preview`} className="btn btn-success">
             Preview
           </Link>
         </div>
       </div>
+  
+      {showAllQR && (
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-4">All QR Codes</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {locations.map(location => (
+              <div key={location.id} className="p-4 bg-white shadow-md rounded-lg flex flex-col justify-center items-center">
+                <h3 className="text-lg font-bold mb-2">{location.location_name} QR Code</h3>
+                {renderQRCode(location)}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
   
       <div className="space-y-4">
         {locations.map((location, index) => (
@@ -115,42 +123,40 @@ const LocationList = () => {
               <p>Trigger: {location.location_trigger}</p>
               <p>Position: {location.location_position}</p>
               <p>Points: {location.score_points}</p>
-              <div className="card-actions justify-end">
+              <div className="card-actions justify-end space-x-2">
+                {/* Arrow buttons for reordering */}
                 <button 
-                  onClick={() => handleMoveLocation(index, 'up')} 
+                  onClick={() => moveLocation(index, -1)} 
                   className="btn btn-sm btn-outline"
-                  disabled={index === 0}
+                  disabled={index === 0} 
                 >
                   ↑
                 </button>
                 <button 
-                  onClick={() => handleMoveLocation(index, 'down')} 
+                  onClick={() => moveLocation(index, 1)} 
                   className="btn btn-sm btn-outline"
-                  disabled={index === locations.length - 1}
+                  disabled={index === locations.length - 1} 
                 >
                   ↓
                 </button>
+
                 <Link to={`/project/${projectId}/location/edit/${location.id}`} className="btn btn-sm btn-outline btn-info">
                   Edit
                 </Link>
                 <button onClick={() => handleDelete(location.id)} className="btn btn-sm btn-outline btn-error">
                   Delete
                 </button>
-                <button onClick={() => handleQRCode(location.id)} className="btn btn-sm btn-outline btn-warning">
+                <button onClick={() => setSelectedQR(selectedQR === location.id ? null : location.id)} className="btn btn-sm btn-outline btn-warning">
                   {selectedQR === location.id ? 'Hide' : 'Show'} QR Code
                 </button>
               </div>
-              {selectedQR === location.id && (
-                <div className="mt-4 flex justify-center">
-                  <QRCode value={`${window.location.origin}/location/${location.id}`} />
-                </div>
-              )}
+              {selectedQR === location.id && renderQRCode(location)}
             </div>
           </div>
         ))}
       </div>
     </div>
-  );  
+  );
 };
 
 export default LocationList;
