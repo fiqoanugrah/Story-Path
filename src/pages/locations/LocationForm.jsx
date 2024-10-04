@@ -20,18 +20,26 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+/**
+ * MapEvents component handles clicks on the map to update the position
+ * @param {function} setPosition - Function to update position state on click
+ */
 function MapEvents({ setPosition }) {
   useMapEvents({
     click(e) {
-      setPosition(e);
+      setPosition(e); // Update map position when map is clicked
     },
   });
   return null;
 }
 
+/**
+ * LocationForm component
+ * Handles creation and editing of locations, with a map interface for selecting a position.
+ */
 const LocationForm = () => {
-  const { projectId, id } = useParams();
-  const navigate = useNavigate();
+  const { projectId, id } = useParams(); // Get projectId and locationId from URL params
+  const navigate = useNavigate(); // Hook to handle navigation
   const [formData, setFormData] = useState({
     location_name: '',
     location_trigger: 'Location',
@@ -40,13 +48,13 @@ const LocationForm = () => {
     clue: '',
     location_content: ''
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [mapPosition, setMapPosition] = useState(null);
+  const [loading, setLoading] = useState(false); // Loading state
+  const [error, setError] = useState(null); // Error state
+  const [mapPosition, setMapPosition] = useState(null); // Map position state
 
   useEffect(() => {
     if (id) {
-      fetchLocation(id);
+      fetchLocation(id); // Fetch existing location if editing
     }
   }, [id]);
 
@@ -54,20 +62,24 @@ const LocationForm = () => {
     if (formData.location_position) {
       const [lat, lng] = formData.location_position.split(',').map(Number);
       if (!isNaN(lat) && !isNaN(lng)) {
-        setMapPosition([lat, lng]);
+        setMapPosition([lat, lng]); // Set map position if valid coordinates exist
       }
     }
   }, [formData.location_position]);
 
+  /**
+   * Fetch the existing location for editing
+   * @param {string} locationId - The ID of the location to fetch
+   */
   const fetchLocation = async (locationId) => {
     try {
-      setLoading(true);
+      setLoading(true); // Show loading spinner
       const location = await getLocation(locationId);
       setFormData(location);
       if (location.location_position) {
         const [lat, lng] = location.location_position.split(',').map(Number);
         if (!isNaN(lat) && !isNaN(lng)) {
-          setMapPosition([lat, lng]);
+          setMapPosition([lat, lng]); // Set map position if coordinates are valid
         } else {
           setMapPosition([-27.4975, 153.0137]); // Default to Brisbane if coordinates are invalid
         }
@@ -75,51 +87,67 @@ const LocationForm = () => {
     } catch (err) {
       setError(`Failed to fetch location: ${err.message}`);
     } finally {
-      setLoading(false);
+      setLoading(false); // Hide loading spinner
     }
   };
 
+  /**
+   * Handle form input changes for location data
+   * @param {object} e - Event object from input change
+   */
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? (value !== "" ? parseFloat(value) : 0) : value
+      [name]: type === 'number' ? (value !== "" ? parseFloat(value) : 0) : value, // Handle numeric input
     }));
   };
 
+  /**
+   * Handle rich text content changes for location content
+   * @param {string} content - The updated rich text content
+   */
   const handleContentChange = (content) => {
-    setFormData(prev => ({ ...prev, location_content: content }));
+    setFormData((prev) => ({ ...prev, location_content: content }));
   };
 
+  /**
+   * Handle click event on the map to set the position
+   * @param {object} e - Leaflet event object containing latlng
+   */
   const handleMapClick = (e) => {
     const { lat, lng } = e.latlng;
-    setMapPosition([lat, lng]);
-    setFormData(prev => ({ 
-      ...prev, 
-      location_position: `${lat.toFixed(6)},${lng.toFixed(6)}` 
+    setMapPosition([lat, lng]); // Update map position
+    setFormData((prev) => ({
+      ...prev,
+      location_position: `${lat.toFixed(6)},${lng.toFixed(6)}`, // Set position in form data
     }));
   };
 
+  /**
+   * Handle form submission for creating or updating location
+   * @param {object} e - Event object from form submission
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(true); // Show loading spinner
     setError(null);
     try {
       const dataToSend = {
         ...formData,
         project_id: projectId,
-        username: USERNAME
+        username: USERNAME,
       };
       if (id) {
-        await updateLocation(id, dataToSend);
+        await updateLocation(id, dataToSend); // Update location if ID exists
       } else {
-        await createLocation(dataToSend);
+        await createLocation(dataToSend); // Create new location otherwise
       }
-      navigate(`/project/${projectId}/locations`);
+      navigate(`/project/${projectId}/locations`); // Redirect to locations list
     } catch (err) {
       setError(`Failed to save location: ${err.message}`);
     } finally {
-      setLoading(false);
+      setLoading(false); // Hide loading spinner
     }
   };
 
@@ -127,7 +155,7 @@ const LocationForm = () => {
 
   return (
     <div className="min-h-screen bg-base-200 p-4">
-      {/* Updated Back Button to match style */}
+      {/* Back button */}
       <button
         onClick={() => navigate(`/project/${projectId}/locations`)}
         className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"

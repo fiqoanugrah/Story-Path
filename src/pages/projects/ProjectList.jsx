@@ -1,21 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProjects, deleteProject } from '../../utils/api';
+import PrimaryButton from "../../components/Buttons/PrimaryButton";
+import SecondaryButton from "../../components/Buttons/SecondaryButton";
 
+/**
+ * ProjectList component
+ * Displays a list of all projects with options to view, edit, or delete each one.
+ */
 const ProjectList = () => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [projects, setProjects] = useState([]); // State to store the list of projects
+  const [loading, setLoading] = useState(true); // State to track loading status
+  const [error, setError] = useState(null); // State to store any error messages
 
+   // Fetch the projects when the component mounts
   useEffect(() => {
     fetchProjects();
   }, []);
 
+  /**
+   * Fetch the list of projects from the server
+   */
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const data = await getProjects();
-      setProjects(data);
+      const data = await getProjects(); // Fetch projects from API
+      setProjects(data); // Update state with the fetched projects
     } catch (err) {
       setError(`Failed to fetch projects: ${err.message}`);
     } finally {
@@ -23,18 +33,26 @@ const ProjectList = () => {
     }
   };
 
+  /**
+   * Handle project deletion
+   * Confirms deletion and deletes the project if confirmed
+   * @param {string} id - The ID of the project to delete
+   */
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
-        await deleteProject(id);
-        fetchProjects();
+        await deleteProject(id); // Delete the project by its ID
+        fetchProjects(); // Refresh the list of projects after deletion
       } catch (err) {
         setError(`Failed to delete project: ${err.message}`);
       }
     }
   };
 
+  // Show a loading spinner if projects are being fetched
   if (loading) return <div className="flex justify-center items-center h-screen"><span className="loading loading-spinner loading-lg"></span></div>;
+  // Display error message if any error occurs
   if (error) return <div className="alert alert-error">{error}</div>;
 
   return (

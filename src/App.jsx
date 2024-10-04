@@ -2,7 +2,7 @@ import React from 'react';
 import 'leaflet/dist/leaflet.css'; 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
-import Header from './components/Header';
+import Header from './components/Layout/Header';
 import Home from './pages/Home';
 import Projects from './pages/Projects';
 import ProjectForm from './pages/projects/ProjectForm';

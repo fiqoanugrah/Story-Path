@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createProject, updateProject, getProject, USERNAME } from '../../utils/api';
+import PrimaryButton from '../../components/Buttons/PrimaryButton';
 
+/**
+ * ProjectForm component
+ * Renders a form to create or edit a project based on the presence of an ID in the URL params.
+ */
 const ProjectForm = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id } = useParams(); // Extract project ID from route parameters
+  const navigate = useNavigate(); // Hook for programmatic navigation
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -14,20 +19,25 @@ const ProjectForm = () => {
     initial_clue: '',
     homescreen_display: 'Display initial clue',
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false); // State to track loading
+  const [error, setError] = useState(null); // State to track errors
 
+  // Fetch the project data if an ID is provided (edit mode)
   useEffect(() => {
     if (id) {
       fetchProject(id);
     }
   }, [id]);
 
+  /**
+   * Fetch project data from the server
+   * @param {string} projectId - The ID of the project to fetch
+   */
   const fetchProject = async (projectId) => {
     try {
       setLoading(true);
       const project = await getProject(projectId);
-      setFormData(project);
+      setFormData(project); // Populate form with the fetched project data
     } catch (err) {
       setError(`Failed to fetch project: ${err.message}`);
     } finally {
@@ -35,22 +45,35 @@ const ProjectForm = () => {
     }
   };
 
+
+  /**
+   * Handle changes to form inputs
+   * Updates the form data state when an input is changed
+   * @param {Object} e - The event object from the input field
+   */
   const handleChange = (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    setFormData({ ...formData, [e.target.name]: value }); // Dynamically update form data
   };
 
+  /**
+   * Handle form submission
+   * Sends the form data to the server for either creating or updating a project
+   * @param {Object} e - The event object from form submission
+   */
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission behavior
     setLoading(true);
     setError(null);
     try {
       if (id) {
+        // If there's an ID, update the existing project
         await updateProject(id, formData);
       } else {
+        // Otherwise, create a new project
         await createProject(formData);
       }
-      navigate('/projects');
+      navigate('/projects'); // Navigate back to the projects list after submission
     } catch (err) {
       setError(`Failed to save project: ${err.message}`);
     } finally {
@@ -58,12 +81,13 @@ const ProjectForm = () => {
     }
   };
 
+  // Show a loading spinner if the form is submitting or loading project data
   if (loading) return <div className="flex justify-center items-center h-screen"><span className="loading loading-spinner loading-lg"></span></div>;
-
+  
   return (
     <div className="min-h-screen bg-base-200 p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Back button unchanged */}
+        {/* Back button */}
         <button
           onClick={() => navigate('/projects')}
           className="text-blue-700 font-semibold mb-6 flex items-center"
@@ -168,10 +192,10 @@ const ProjectForm = () => {
             </select>
           </div>
 
-          <button type="submit" className="btn btn-primary w-full" disabled={loading}>
-            {loading ? <span className="loading loading-spinner"></span> : null}
-            {id ? 'Update Project' : 'Create Project'}
-          </button>
+          <PrimaryButton 
+            label={id ? 'Update Project' : 'Create Project'} 
+            className="w-full" 
+          />
         </form>
       </div>
     </div>
